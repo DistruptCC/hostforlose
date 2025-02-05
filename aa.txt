@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# --- Configuration ---
+webhook_url="https://discord.com/api/webhooks/1336579281639309364/HI7Y4IdHZfuHiFCIpLDtvZFZP9dUviLkfKzhym5BlIXNWGGTgcz574NeBfhqynJ02N8G"
+
+# --- Detect OS and adjust commands accordingly ---
+os_type=$(uname -s)
+
+if [[ "$os_type" == "Linux" ]]; then
+  hostname=$(hostname)
+  os=$(lsb_release -ds 2>/dev/null || uname -o)  # Try lsb_release for distro info, fallback to uname
+  kernel=$(uname -r)
+  cpu=$(lscpu | grep "Model name:" | cut -d ":" -f 2 | tr -s " " 2>/dev/null || grep "model name" /proc/cpuinfo | head -1 | cut -d ":" -f 2 | tr -s " ") # Fallback for older systems
+  memory=$(free -h | grep Mem | awk '{print $2}')
+  disk_usage=$(df -h / | awk '$NF=="/"{printf "%s/%s used\n", $3, $2}')
+  uptime=$(uptime | awk '{print $3,$4}' | sed 's/,$//' 2>/dev/null || uptime | cut -d "," -f 1 | sed 's/.*up //')  # Handle different uptime formats
+elif [[ "$os_type" == "Darwin" ]]; then  # macOS
+  hostname=$(hostname)
+  os="macOS $(sw_vers -productVersion)"
+  kernel=$(uname -r)
+  cpu=$(sysctl -n machdep.cpu.brand_string)
+  memory=$(system_profiler SPHardwareDataType | grep "Memory:" | awk '{print $2}')
+  disk_usage=$(df -h / | awk '$NF=="/"{printf "%s/%s used\n", $5, $2}')  # Different df output on macOS
+  uptime=$(uptime | cut -d "," -f 1 | sed 's/.*up //')
+else
+  echo "Unsupported OS: $os_type"
+  exit 1  # Exit if the OS isn't recognized
+fi
+
+
+current_time=$(date +"%Y-%m-%d %H:%M:%S")
+
+
+# ... (rest of the script - JSON payload construction and curl command remain the same)
